@@ -16,6 +16,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class Environment:
+    '''
+    This class is used to define the environment of the agent.
+    '''
     def __init__(self,env=None,nOfa=None,nOfs=None,
                  ub=None, lb=None):
         self.env             = env
@@ -37,6 +40,9 @@ class Environment:
         print("Min Value of Action ->  {}".format(self.lowerBound))
 
 class OUActionNoise:
+    '''
+    This class is used to define the Ornstein-Uhlenbeck process noise.
+    '''
     def __init__(self, mean, std_deviation, theta=0.15, dt=1e-2, x_initial=None):
         self.theta     = theta
         self.mean      = mean
@@ -61,6 +67,9 @@ class OUActionNoise:
     #OUActionNoise(mean=np.zeros(1), std_deviation=float(0.2) * np.ones(1))
 
 class Buffer:
+    '''
+    This class is used to define the buffer for the agent. Buffer is used to store the experiences of the agent.
+    '''
     def __init__(self, buffer_capacity=100000, batch_size=64, num_states=None, num_actions=None):
         # Number of "experiences" to store at max
         self.buffer_capacity = buffer_capacity
@@ -112,10 +121,10 @@ class Agent(Environment,Buffer):
         Buffer.__init__(self,buffer_capacity=buffer_capacity, batch_size=batch_size,
                              num_actions=numberOfActions, num_states=numberOfStates)
         
-        self.actor_network   = actor_network
-        self.critic_network  = critic_network
-        self.gamma           = gamma
-        self.tau             = tau
+        self.actor_network   = actor_network             # Actor Network
+        self.critic_network  = critic_network           # Critic Network
+        self.gamma           = gamma                    # Discount factor, used in the calculation of the total discounted reward
+        self.tau             = tau                     # Target Network HyperParameters, used in the calculation of the target network weights
         self.noise           = np.random.normal(0,0.5)
         self.observation     = (None,None,None,None)
         self.models          = {}
@@ -123,7 +132,7 @@ class Agent(Environment,Buffer):
         self.loadsavedfile   = loadsavedfile
         self.disablenoise    = disablenoise
         self.noisevariance   = (self.upperBound-self.lowerBound)*0.1
-        self.annealing       = annealing
+        self.annealing       = annealing               # Number of episodes before learning starts
         self.maxtime         = 0.0
         self.maxscore        = 0.0
         self.mtd             = False
@@ -154,6 +163,9 @@ class Agent(Environment,Buffer):
         Buffer.record(self,self.observation)
 
     def get_actor(self,name='Actor'):
+        '''
+        This function is used to define the actor model. The actor model is used to predict the action for a given state.
+        '''
         model_name              = name
         self.models[model_name] = {'model_path'     : self.savelocation + model_name + '.hdf5',
                                    'mtd_model_path' : self.savelocation + model_name + '_maxtime.hdf5',
@@ -173,6 +185,9 @@ class Agent(Environment,Buffer):
         return self.models[model_name]['model_network']
 
     def get_critic(self,name='Critic'):
+        '''
+        This function is used to define the critic model. The critic model is used to predict the Q-value for a given state-action pair.
+        '''
         model_name              = name
         self.models[model_name] = {'model_path'     : self.savelocation + model_name + '.hdf5',
                                    'mtd_model_path' : self.savelocation + model_name + '_maxtime.hdf5',
@@ -200,6 +215,9 @@ class Agent(Environment,Buffer):
         return self.models[model_name]['model_network']
 
     def policy(self,state):
+        '''
+        This function is used to define the policy of the agent. The policy is used to predict the action for a given state.
+        '''
         sampled_actions = tf.squeeze(self.main_actor_model(state))
         if self.disablenoise:
             self.noise = np.zeros(1)
@@ -218,6 +236,10 @@ class Agent(Environment,Buffer):
 
     # We compute the loss and update parameters
     def learn(self):
+        '''
+        This function is used to define the learning process of the agent. 
+        The learning process is used to update the weights of the actor and critic models.
+        '''
         if self.buffer_counter >= self.annealing:
             # Get sampling range
             record_range  = min(self.buffer_counter, self.buffer_capacity)
@@ -250,6 +272,9 @@ class Agent(Environment,Buffer):
             print('Waiting for the buffer size to reach the annealing number')
 
     def update_target(self):
+        '''
+        
+        '''
         new_weights = []
         target_variables = self.target_critic_model.weights
         for i, variable in enumerate(self.main_critic_model.weights):
