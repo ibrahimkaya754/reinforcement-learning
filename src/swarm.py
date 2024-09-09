@@ -29,8 +29,8 @@ class swarm():
                              'rlagent' : 'no weights'}
         if self.display:
             # Start virtual display
-            vdisplay = Xvfb()
-            vdisplay.start()
+            #vdisplay = Xvfb()
+            #vdisplay.start()
             self.screen       = pygame.display.set_mode((self.screensize[0],self.screensize[1]))
             pygame.display.set_caption("Swarm System")
             self.screen.fill(self.WHITE)
